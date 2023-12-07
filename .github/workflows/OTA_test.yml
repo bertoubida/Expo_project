@@ -21,8 +21,7 @@ jobs:
           echo "ITERATION=$UPDATED_ITERATION" >> $GITHUB_ENV
 
       - name: Get version and commit info
-        run: |
-          VERSION=$(node -e "console.log(require('./package.json').version)")
+        run: |          
           COMMIT_HASH=$(git rev-parse --short HEAD)
           BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
           ITERATION=${{ steps.update_iteration.outputs.iteration }}
