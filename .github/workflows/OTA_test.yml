@@ -32,7 +32,4 @@ jobs:
           git config --global user.name "GitHub Actions"
           git add versions
           git commit -m "Update versionnumber to $UPDATED_ITERATION"
-          git push origin HEAD:${{ github.ref }}
-        env:
-          ITERATION: ${{ steps.update_iteration.outputs.iteration }}
-          GITHUB_TOKEN: ${{ secrets.N_GITHUB_TOKEN }}
+          git push origin HEAD:${{ github.ref }}        
