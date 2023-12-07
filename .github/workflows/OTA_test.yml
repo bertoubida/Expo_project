@@ -2,20 +2,13 @@ name: OTA update
 on:
   push:
     branches:
-      - sandbox
+      - main
 
 jobs:
   update:
     name: EAS Update
     runs-on: ubuntu-latest
-    steps:
-      - name: Check for EXPO_TOKEN
-        run: |
-          if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
-            echo "Token received and verified"
-            exit 1
-          fi
-
+    steps:      
       - name: Checkout repository
         uses: actions/checkout@v3
 
@@ -24,25 +17,26 @@ jobs:
         with:
           node-version: 18.x
           cache: yarn
+      
+      - name: Read and update iteration number
+        id: update_iteration
+        run: |
+          CURRENT_ITERATION=$(grep -oP 'versionnumber = \K\d+' versions)
+          UPDATED_ITERATION=$((CURRENT_ITERATION + 1))
+          sed -i "s/versionnumber = $CURRENT_ITERATION/versionnumber = $UPDATED_ITERATION/" versions
+          echo "ITERATION=$UPDATED_ITERATION" >> $GITHUB_ENV
 
-      - name: Setup EAS
-        uses: expo/expo-github-action@v8
-        with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
+      - name: Get version and commit info
+        run: |
+          VERSION=$(node -e "console.log(require('./package.json').version)")
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
+          ITERATION=${{ steps.update_iteration.outputs.iteration }}
 
-      - name: Install dependencies
-        run: yarn install
-
-      - name: Publish update
-        run: eas update --auto
-
-      - name: Slack notification
-      - steps:
-          - uses: 8398a7/action-slack@v3
-            with:
-              status: ${{ job.status }}
-              fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
-            env:
-              SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-            if: always()
+      - name: Commit and push changes
+        run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+          git add versions
+          git commit -m "Update versionnumber to $UPDATED_ITERATION"
+          git push origin HEAD:${{ github.ref }}
