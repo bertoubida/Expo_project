@@ -35,4 +35,4 @@ jobs:
           git push origin HEAD:${{ github.ref }}
         env:
           ITERATION: ${{ steps.update_iteration.outputs.iteration }}
-          GITHUB_TOKEN: ${{ secrets.EXPO_GITHUB_TOKEN }}
+          EXPO_GITHUB_TOKEN: ${{ secrets.EXPO_GITHUB_TOKEN }}
